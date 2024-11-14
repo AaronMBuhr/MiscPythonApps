@@ -1,28 +1,22 @@
 #!/usr/bin/env python3
 
-import sys
 import re
+import sys
 import textwrap
 
-def main():
-    input_text = sys.stdin.read()
-
-    # remove backslash
-    input_text = input_text.replace("\\", "")
+def process_sections(input_stream):
+    text = input_stream.read()
+    # Regular expression to match the content after "### response:\"
+    pattern = r'###\s*response:\s*\\\n(.*?)(?=\\\n|###\s*instruction:|\Z)'
     
-    # Regular expression to find all responses
-    responses = re.findall(r'### response:(.*?)###', input_text, re.DOTALL | re.IGNORECASE)
+    # Find all matches using the pattern
+    matches = re.findall(pattern, text, re.DOTALL)
     
-    # Last response might not be followed by "###", handle separately
-    last_response_match = re.search(r'### response:(.*)', input_text, re.DOTALL | re.IGNORECASE)
-    if last_response_match:
-        last_response = last_response_match.group(1)
-        if last_response not in responses:
-            responses.append(last_response)
+    # Format the captured sections and add an extra newline after each
+    formatted_texts = [textwrap.fill(t.strip(), width=79) for t in matches]
     
-    for response in responses:
-        wrapped_response = textwrap.fill(response.strip(), width=79)
-        print(f"\n\n{wrapped_response}\n\n")
+    # Output the result
+    sys.stdout.write("\n\n".join(formatted_texts) + "\n\n")
 
 if __name__ == "__main__":
-    main()
+    process_sections(sys.stdin)
